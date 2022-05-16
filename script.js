@@ -1,6 +1,7 @@
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
 
+var ballRadius = 10;
 var x = canvas.width/2;
 var y = canvas.height-30;
 
@@ -18,54 +19,37 @@ var leftPressed = false;
 // 처음에는 버튼이 눌리지 않은 상태이므로 기본 값은 false
 // 키가 눌렸음을 인식하기 위해 eventListener를 설정(하단)
 
-function drawBall() {
-    ctx.beginPath();
-    ctx.arc(x, y, ballRadius, 0, Math.PI*2); //Math.PI = 파이(3.14...) 왜 2를 곱하지
-    ctx.fillStyle = "#0095DD";
-    ctx.fill();
-    ctx.closePath();
-}
-// 공이 매 프레임마다 다시 그려지게 됨
+// bricks
+var brickRowCount = 3;
+var brickColumnCount = 5;
+var brickWidth = 75;
+var brickHeight = 20;
+var brickPadding = 10;
+var brickOffsetTop = 30;
+var brickOffsetLeft = 30;
 
-function drawPaddle() {
-    ctx.beginPath();
-    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
-    ctx.fillStyle = "#0095DD";
-    ctx.fill();
-    ctx.closePath();
-}
 
-function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBall();
-    drawPaddle();
-    // drawBall, drawPaddle 함수를 호출
-    x += dx;
-    y += dy;
-    if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
-        dx = -dx;
-    }
-    // 공의 위치에서 y 값이 0보다 작은 경우 음/양수를 반대로 바꾸어 y축의 방향을 바꾸어줌
-    // 공이 매 프레임마다 2px만큼 움직이고 있었다면 이제는 매 프레임마다 2px만큼 "아래 방향으로" 이동할 것
-    if(y + dy < ballRadius) {
-        dy = -dy;
-    } else if(y + dy > canvas.height-ballRadius) {
-        if(x > paddleX && x < paddleX + paddleWidth) {
-            dy = -dy;
-        }
-        else {
-            alert("GAME OVER");
-            document.location.reload();
-        }
-    }
+// function drawBricks() {
+//     for(var c=0; c<brickColumnCount; c++) {
+//         bricks[c] = [];
+//         for(var r=0; r<brickRowCount; r++) {
+//             bricks[c][r].x = 0;
+//             bricks[c][r].y = 0;
+//             ctx.beginPath();
+//             ctx.rect(0, 0, brickWidth, brickHeight);
+//             ctx.fillStyle = "#0095DD"
+//             ctx.fill();
+//             ctx.closePath();
+//         }
+//     }
+// }
 
-    
-    if(rightPressed && paddleX < canvas.width-paddleWidth) {
-        paddleX += 7;
-    } else if(leftPressed && paddleX > 0) {
-        paddleX -= 7;
+var bricks = [];
+for(var c=0; c<brickColumnCount; c++) {
+    bricks[c] = [];
+    for(var r=0; r<brickRowCount; r++) {
+        bricks[c][r] = { x: 0, y: 0, status: 1 };
     }
-    // keyCode37 클릭 시 paddle은 좌측으로 7px, 39 클릭 시 우측으로 7px 움직임
 }
 
 document.addEventListener("keydown", keyDownHandler, false);
@@ -92,9 +76,104 @@ function keyUpHandler(e) {
     }
 }
 
+function collisionDetection() {
+    for(var c=0; c<brickColumnCount; c++) {
+      for(var r=0; r<brickRowCount; r++) {
+        var b = bricks[c][r];
+            //b는 충돌 감지의 반복에서 사용할 벽돌 객체를 저장하는 변수
+            if(b.status == 1) {
+                if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
+                  dy = -dy;
+                  b.status = 0;
+                }
+              }
+            }
+          }
+        }
+
+// var brickX = (c*(brickWidth+brickPadding)) + brickOffsetLeft;
+// var brickY = (r*(brickHeight + brickPadding)) + brickOffsetTop;
+
+
+function drawBall() {
+    ctx.beginPath();
+    ctx.arc(x, y, ballRadius, 0, Math.PI*2); //Math.PI = 파이(3.14...) 왜 2를 곱하지
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    ctx.closePath();
+}
+// 공이 매 프레임마다 다시 그려지게 됨
+
+function drawPaddle() {
+    ctx.beginPath();
+    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+    ctx.fillStyle = "#0095DD";
+    ctx.fill();
+    ctx.closePath();
+}
+
+function drawBricks() {
+    for(var c=0; c<brickColumnCount; c++) {
+        for(var r=0; r<brickRowCount; r++) {
+            if(bricks[c][r].status == 1) {
+            // if 함수로 status == 1 을 추가
+                var brickX = (c*(brickWidth+brickPadding))+brickOffsetLeft;
+                var brickY = (r*(brickHeight+brickPadding))+brickOffsetTop;
+
+                bricks[c][r].x = brickX;
+                bricks[c][r].y = brickY;
+
+                ctx.beginPath();
+                ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                ctx.fillStyle = "#0095DD";
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBricks();
+    drawBall();
+    drawPaddle();
+    collisionDetection();
+    // drawBall, drawPaddle 함수를 호출
+    x += dx;
+    y += dy;
+    if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+        dx = -dx;
+    }
+    // 공의 위치에서 y 값이 0보다 작은 경우 음/양수를 반대로 바꾸어 y축의 방향을 바꾸어줌
+    // 공이 매 프레임마다 2px만큼 움직이고 있었다면 이제는 매 프레임마다 2px만큼 "아래 방향으로" 이동할 것
+    if(y + dy < ballRadius) {
+        dy = -dy;
+    } else if(y + dy > canvas.height-ballRadius) {
+        if(x > paddleX && x < paddleX + paddleWidth) {
+            dy = -dy;
+        }
+        else {
+            alert("GAME OVER");
+            document.location.reload();
+        }
+    }
+    
+    if(rightPressed && paddleX < canvas.width-paddleWidth) {
+        paddleX += 7;
+    } else if(leftPressed && paddleX > 0) {
+        paddleX -= 7;
+    }
+    // keyCode37 클릭 시 paddle은 좌측으로 7px, 39 클릭 시 우측으로 7px 움직임
+    x += dx;
+    y += dy;
+}
+
+
+
 setInterval(draw, 10);
 // draw 함수는 setInterval을 통해 10밀리초마다 실행됨
 
-var ballRadius = 10;
+
 
 
