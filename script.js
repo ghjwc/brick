@@ -28,21 +28,7 @@ var brickPadding = 10;
 var brickOffsetTop = 30;
 var brickOffsetLeft = 30;
 
-
-// function drawBricks() {
-//     for(var c=0; c<brickColumnCount; c++) {
-//         bricks[c] = [];
-//         for(var r=0; r<brickRowCount; r++) {
-//             bricks[c][r].x = 0;
-//             bricks[c][r].y = 0;
-//             ctx.beginPath();
-//             ctx.rect(0, 0, brickWidth, brickHeight);
-//             ctx.fillStyle = "#0095DD"
-//             ctx.fill();
-//             ctx.closePath();
-//         }
-//     }
-// }
+var score = 0;
 
 var bricks = [];
 for(var c=0; c<brickColumnCount; c++) {
@@ -85,11 +71,25 @@ function collisionDetection() {
                 if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
                   dy = -dy;
                   b.status = 0;
+                  score++;
+                  if(score == brickRowCount * brickColumnCount) {
+                      alert("YOU WIN, CONGRATULATIONS!");
+                      document.location.reload();
+                      clearInterval(interval);
+                  }
                 }
               }
-            }
-          }
         }
+    }
+}
+
+function drawScore() {
+    ctx.font = "16px Arial"
+    ctx.fillStyle = "#4dabf7"
+    ctx.fillText("SCORE : "+ score, 8, 20);
+    // sore:현재 점수, (8, 20) : 텍스트가 캔버스에 배치될 좌표
+}
+
 
 // var brickX = (c*(brickWidth+brickPadding)) + brickOffsetLeft;
 // var brickY = (r*(brickHeight + brickPadding)) + brickOffsetTop;
@@ -98,7 +98,7 @@ function collisionDetection() {
 function drawBall() {
     ctx.beginPath();
     ctx.arc(x, y, ballRadius, 0, Math.PI*2); //Math.PI = 파이(3.14...) 왜 2를 곱하지
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = "aquamarine";
     ctx.fill();
     ctx.closePath();
 }
@@ -107,7 +107,7 @@ function drawBall() {
 function drawPaddle() {
     ctx.beginPath();
     ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = "#4dabf7";
     ctx.fill();
     ctx.closePath();
 }
@@ -125,7 +125,7 @@ function drawBricks() {
 
                 ctx.beginPath();
                 ctx.rect(brickX, brickY, brickWidth, brickHeight);
-                ctx.fillStyle = "#0095DD";
+                ctx.fillStyle = "#ffd8a8";
                 ctx.fill();
                 ctx.closePath();
             }
@@ -138,6 +138,7 @@ function draw() {
     drawBricks();
     drawBall();
     drawPaddle();
+    drawScore();
     collisionDetection();
     // drawBall, drawPaddle 함수를 호출
     x += dx;
@@ -156,6 +157,7 @@ function draw() {
         else {
             alert("GAME OVER");
             document.location.reload();
+            clearInterval(interval);
         }
     }
     
@@ -171,7 +173,7 @@ function draw() {
 
 
 
-setInterval(draw, 10);
+setInterval(draw, 20);
 // draw 함수는 setInterval을 통해 10밀리초마다 실행됨
 
 
